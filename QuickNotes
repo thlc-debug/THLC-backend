@@ -1,0 +1,48 @@
+This file is there to save some quick notes while development so that it can be read by others to get a quick overview
+
+Start-> npm start(nodemon configured)
+
+---
+
+20-06-2024
+
+---
+
+Router Details
+Admin : /admin/Hotel/newHotel = to add new hotel
+/admin/Hotel/deleteHotel/:id = to delte existing hotel
+
+User : /hotel/getHotel = to fetch all hotel data
+/hotel/getHotel/:id = to fetch specific hotel data
+
+---
+
+
+21-06-24
+
+---
+
+controllers/
+otpController.js:  generates a random OTP, checks if it's already sent within a cooldown period, saves it to a database, and sends it via email.
+signupController.js: registration by validating input data, verifying an OTP, checking for existing users, creating a new user record in the database, and deleting the OTP record upon successful registration.
+loginController.js: authenticates a user by validating the email and password, verifying the user's credentials, and generating a JWT token upon successful login
+
+Models/
+Otp.js: defines a Mongoose model for storing OTPs, including fields for email (mail), OTP value (otp), and a createdAt timestamp with an index to automatically expire records after 2 minutes.
+
+utils/
+sendEmail.js: uses nodemailer to send an OTP to a specified email address (mail) via Gmail, using credentials stored in environment variables.
+
+routes/
+auth.js: sets up Express routes for user registration, login, logout, and sending OTP, with input validation and authentication middleware for logout, linking to their respective controller functions.
+
+---
+
+
+9/7/24--
+
+added the "getHotelsByCountry" in the newHotelController (line - 130)
+added the api route for fetching the getHotelsByCountry in the "./routes/hotel.js" (line - 15) 
+    api => GET "http://localhost:4000/newHotel/hotel-by-country/:country"
+added the api route for fetching the getHotelCountByCountry in the "./routes/hotel.js" (line - 18)
+    api=> GET "http://localhost:4000/newHotel/hotel-by-country/:country"
