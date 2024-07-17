@@ -29,6 +29,9 @@ const transactionSchema = new mongoose.Schema({
     enum: ['Pending', 'Completed', 'Failed', 'Refunded'],
     required: true
   },
+  transactionId: {
+    type: String,
+  },
   transactionDate: {
     type: Date,
     default: Date.now
