@@ -90,7 +90,7 @@ const getHotelEarnings = async (req, res) => {
 const createReservation = async (req, res) => {
   try {
     const {
-      user_id, name, email, phone, id_proof, no_of_people, no_of_days, check_in, check_out,
+      user_id, name, email, phone, id_proof, no_of_people, check_in, check_out,
       hotel_id, room_id, price, is_payment_done, status
     } = req.body;
 
@@ -103,7 +103,6 @@ const createReservation = async (req, res) => {
       phone,
       id_proof,
       no_of_people,
-      no_of_days,
       check_in,
       check_out,
       hotel_id,
