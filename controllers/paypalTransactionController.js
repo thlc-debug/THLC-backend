@@ -15,7 +15,7 @@ const payPalCreateOrder = async (req, res) => {
       no_of_people: cart.no_of_people,
       check_in: cart.check_in,
       chech_out: cart.check_out,
-      user_id: cart.user_id,
+      user_id: (cart.user_id === "guestUserId") ? "6694380c177c63bfcd747404" : cart.userId,
       hotel_id: cart.hotel_id,
       price: cart.amount,
       status: "pending",
