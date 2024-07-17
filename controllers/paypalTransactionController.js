@@ -15,7 +15,7 @@ const payPalCreateOrder = async (req, res) => {
       no_of_people: cart.no_of_people,
       check_in: cart.check_in,
       chech_out: cart.check_out,
-      user_id: req.user._id,
+      user_id: cart.user_id,
       hotel_id: cart.hotel_id,
       price: cart.amount,
       status: "pending",
@@ -25,7 +25,7 @@ const payPalCreateOrder = async (req, res) => {
 
     const newTransaction = new Transaction({
       reservationId: newReservation._id,
-      userId: req.user._id,
+      userId: cart.user_id,
       amount: cart.amount,
       currency: "USD",
       paymentMethod: "PayPal",
