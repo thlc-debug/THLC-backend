@@ -1,8 +1,10 @@
 const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
+const session = require("express-session");
 const dotenv = require("dotenv");
 const connectDB = require("./Config/dbConnection");
+const passport = require('./Config/passport');
 
 // Load environment variables from .env file
 dotenv.config();
@@ -35,6 +37,16 @@ app.use(
     credentials: true, // Allow sending cookies from the client
   })
 );
+
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+}));
+
+app.use(passport.initialize());
+app.use(passport.session());
+
 
 // Connect to the database
 connectDB();

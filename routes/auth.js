@@ -9,6 +9,7 @@ const passwordResetController = require('../controllers/passwordResetController'
 const activeUsersController = require('../controllers/activeUserController');
 const { check } = require('express-validator');
 const authMiddleware = require('../middleware/authMiddleware');
+const passport = require('../Config/passport');
 
 // Register route
 router.post('/signup', [
@@ -21,6 +22,22 @@ router.post('/signup', [
 
 // Login route
 router.post('/login', loginController.login);
+
+// Sign In with Google
+router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+
+router.get('/google/callback',
+    passport.authenticate('google', { failureRedirect: '/auth/failure' }),
+    (req, res) => {
+      const token = req.user.generateAuthToken(); // Generate JWT token for the user
+      res.redirect(`https://luxury-hotel-concierge.vercel.app/auth/success?token=${token}`); // Redirect to a frontend route with the token
+    }
+  );
+
+  router.get('/failure', (req, res) => {
+    res.send('Failed to authenticate..');
+  });
+
 
 // Logout route
 router.post('/logout', logoutController.logout);
