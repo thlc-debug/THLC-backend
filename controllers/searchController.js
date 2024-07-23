@@ -4,7 +4,7 @@ const Reservation = require("../Models/Reservation");
 const Hotel = require("../Models/Hotel");
 
 const searchHotels = async (req, res) => {
-  const { city, country, check_in, check_out } = req.query;
+  const { city, country } = req.query;
 
   try {
     // Create filter object based on provided query parameters
@@ -13,50 +13,50 @@ const searchHotels = async (req, res) => {
     if (country) filter["country"] = country;
 
     // Find hotels matching the criteria
-    let hotels = await NewHotel.find(filter).populate("rooms");
+    let hotels = await NewHotel.find(filter)
 
-    // Filter hotels based on room availability
-    if (check_in && check_out) {
-      const checkInDate = new Date(check_in);
-      const checkOutDate = new Date(check_out);
+    // // Filter hotels based on room availability
+    // if (check_in && check_out) {
+    //   const checkInDate = new Date(check_in);
+    //   const checkOutDate = new Date(check_out);
 
-      hotels = await Promise.all(
-        hotels.map(async (hotel) => {
-          const availableRooms = await Promise.all(
-            hotel.rooms.map(async (room) => {
-              const reservedCount = await Reservation.countDocuments({
-                room_id: room._id,
-                $or: [
-                  {
-                    check_in: { $lt: checkInDate },
-                    check_out: { $gt: checkInDate },
-                  },
-                  {
-                    check_in: { $lt: checkOutDate },
-                    check_out: { $gt: checkOutDate },
-                  },
-                  {
-                    check_in: { $gte: checkInDate },
-                    check_out: { $lte: checkOutDate },
-                  },
-                ],
-              });
-              // Check if the room is available
-              return reservedCount === 0;
-            })
-          );
+    //   hotels = await Promise.all(
+    //     hotels.map(async (hotel) => {
+    //       const availableRooms = await Promise.all(
+    //         hotel.rooms.map(async (room) => {
+    //           const reservedCount = await Reservation.countDocuments({
+    //             room_id: room._id,
+    //             $or: [
+    //               {
+    //                 check_in: { $lt: checkInDate },
+    //                 check_out: { $gt: checkInDate },
+    //               },
+    //               {
+    //                 check_in: { $lt: checkOutDate },
+    //                 check_out: { $gt: checkOutDate },
+    //               },
+    //               {
+    //                 check_in: { $gte: checkInDate },
+    //                 check_out: { $lte: checkOutDate },
+    //               },
+    //             ],
+    //           });
+    //           // Check if the room is available
+    //           return reservedCount === 0;
+    //         })
+    //       );
 
-          // Return hotel if at least one room type is available
-          if (availableRooms.some((isAvailable) => isAvailable)) {
-            return hotel;
-          }
-          return null;
-        })
-      );
+    //       // Return hotel if at least one room type is available
+    //       if (availableRooms.some((isAvailable) => isAvailable)) {
+    //         return hotel;
+    //       }
+    //       return null;
+    //     })
+    //   );
 
-      // Filter out null results
-      hotels = hotels.filter((hotel) => hotel !== null);
-    }
+    //   // Filter out null results
+    //   hotels = hotels.filter((hotel) => hotel !== null);
+    // }
 
     res.status(200).json(hotels);
   } catch (error) {
