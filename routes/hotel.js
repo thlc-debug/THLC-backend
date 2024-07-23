@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const newHotelController = require('../controllers/newHotelController');
-
+const { getHotelsSortedByRating } = require('../controllers/premiumPropertiesController');
 
 
 // Route to fetch resorts
@@ -31,6 +31,8 @@ router.get('/cities-alphabetical', newHotelController.getCitiesAlphabetically);
 // New route for fetching cities by country
 router.get('/cities-by-country/:country', newHotelController.getCitiesByCountry);
 
+// Route for Sorted Hotels by rating
+router.get('/sorted-by-rating', getHotelsSortedByRating);
 
 router.get('/', newHotelController.getAllNewHotels);
 router.get('/top-countries', newHotelController.getTopCountriesByHotelCount);

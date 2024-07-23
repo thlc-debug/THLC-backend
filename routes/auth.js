@@ -30,7 +30,23 @@ router.get('/google/callback',
     passport.authenticate('google', { failureRedirect: '/auth/failure' }),
     (req, res) => {
       const token = req.user.generateAuthToken(); // Generate JWT token for the user
-      res.redirect(`https://luxury-hotel-concierge.vercel.app/auth/success?token=${token}`); // Redirect to a frontend route with the token
+      res.send(`
+      <!DOCTYPE html>
+      <html>
+      <head><title>Auth Screen</title></head>
+      <body>
+        <script>
+            if (window.opener) {
+              window.opener.postMessage(${JSON.stringify({
+                token:token,
+              })}, '*');
+            }
+            window.close();
+        </script>
+      </body>
+      </html>
+    `);
+    // res.redirect(`https://luxury-hotel-concierge.vercel.app/auth/success?token=${token}`); // Redirect to a frontend route with the token
     }
   );
 
