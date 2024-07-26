@@ -1,9 +1,0 @@
-bcrypt: For password hashing
-express: Web framework for Node.js
-mongoose: MongoDB object modeling tool
-jsonwebtoken: For JWT creation and validation
-dotenv: For loading environment variables
-nodemailer: For sending emails
-express-validator: For validating request inputs
-cookie-parser: For parsing cookies
-cors: For handling Cross-Origin Resource Sharing
