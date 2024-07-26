@@ -1,21 +1,20 @@
 const Villa = require('../Models/Villa');
+const newHotel = require('../Models/newHotel');
 
 // Get all villas
 exports.getAllVillas = async (req, res) => {
   try {
-    const villas = await Villa.find();
+    const villas = await newHotel.find({ type: "Villa" });
     res.status(200).json(villas);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
-
-
 // Create new villa
 exports.createVilla = async (req, res) => {
   const { name, photoUrls } = req.body;
-  const newVilla = new Villa({ name, photoUrls });
+  const newVilla = new newHotel({ name, photoUrls, type: "Villa" });
   try {
     const savedVilla = await newVilla.save();
     res.status(201).json(savedVilla);
@@ -24,11 +23,10 @@ exports.createVilla = async (req, res) => {
   }
 };
 
-
-// // Get villa by ID
+// Get villa by ID
 exports.getVillaById = async (req, res) => {
   try {
-    const villa = await Villa.findById(req.params.id);
+    const villa = await newHotel.findOne({ _id: req.params.id, type: "Villa" });
     if (!villa) {
       return res.status(404).json({ message: 'Villa not found' });
     }
