@@ -4,7 +4,7 @@ const cookieParser = require("cookie-parser");
 const session = require("express-session");
 const dotenv = require("dotenv");
 const connectDB = require("./Config/dbConnection");
-const passport = require('./Config/passport');
+const passport = require("./Config/passport");
 
 // Load environment variables from .env file
 dotenv.config();
@@ -24,6 +24,8 @@ const searchRoute = require("./routes/searchFilter"); // to search hotel
 const ContactUsRoute = require("./routes/contact"); // contact us form stores here
 const transactionRoutes = require("./routes/transactionRoutes");
 const cityImg = require("./routes/cityImg");
+const customError = require("./utils/customError");
+const globalErrorHandler = require("./utils/globalErrorHandler");
 
 const port = process.env.PORT || 4000; // Port selection
 const app = express(); // Instance of the express server
@@ -38,15 +40,16 @@ app.use(
   })
 );
 
-app.use(session({
-  secret: process.env.SESSION_SECRET,
-  resave: false,
-  saveUninitialized: false,
-}));
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+  })
+);
 
 app.use(passport.initialize());
 app.use(passport.session());
-
 
 // Connect to the database
 connectDB();
@@ -73,6 +76,13 @@ app.use("/api/transactions", transactionRoutes);
 app.get("/", (req, res) => {
   res.send("Server started successfully");
 });
+
+app.all("*", (req, res, next) => {
+  const error = new customError(NOT_FOUND.message, NOT_FOUND.status);
+  next(error);
+});
+
+app.use(globalErrorHandler);
 
 // Start the server
 app.listen(port, () => {
