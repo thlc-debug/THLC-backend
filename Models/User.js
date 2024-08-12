@@ -18,6 +18,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ["staff", "admin", "guest"],
     required: true,
+    default: "guest"
   },
   idProof: { type: String, trim: true },
   worker_of: {
@@ -70,4 +71,6 @@ userSchema.methods.generateAuthToken = function () {
   return token;
 };
 
-module.exports = mongoose.models.User || mongoose.model("User", userSchema);
+const User = mongoose.model("User", userSchema);
+
+module.exports = User;

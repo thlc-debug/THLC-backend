@@ -25,6 +25,11 @@ module.exports = {
     message: "Registered successfully",
   },
 
+  CREATED_SUCCESS: {
+    status: 201,
+    message: "Created successfully",
+  },
+
   NO_CONTENT: {
     status: 204,
     message: "No content available",

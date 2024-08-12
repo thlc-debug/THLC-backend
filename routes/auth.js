@@ -12,13 +12,7 @@ const authMiddleware = require('../middleware/authMiddleware');
 const passport = require('../Config/passport');
 
 // Register route
-router.post('/signup', [
-  check('username').not().isEmpty().withMessage('Username is required'),
-  check('mail').isEmail().withMessage('Valid email is required'),
-  check('phone').not().isEmpty().withMessage('Phone number is required'),
-  check('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long'),
-  check('otp').not().isEmpty().withMessage('OTP is required')
-], signupController.register);
+router.post('/signup', signupController.registerUser);
 
 // Login route
 router.post('/login', loginController.login);
@@ -46,7 +40,6 @@ router.get('/google/callback',
       </body>
       </html>
     `);
-    // res.redirect(`https://luxury-hotel-concierge.vercel.app/auth/success?token=${token}`); // Redirect to a frontend route with the token
     }
   );
 
