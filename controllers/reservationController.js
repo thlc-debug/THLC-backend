@@ -158,6 +158,47 @@ const cancelReservation = async (req, res) => {
   }
 };
 
+
+
+// Get count of reservations with status 'pending'
+const getPendingReservationCount = async (req, res) => {
+  try {
+    const count = await Reservation.countDocuments({ status: 'pending' });
+    res.status(200).json({ count });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error });
+  }
+};
+
+
+// Get count of reservations with status 'confirmed'
+const getConfirmedReservationCount = async (req, res) => {
+  try {
+    const count = await Reservation.countDocuments({ status: 'confirmed' });
+    res.status(200).json({ count });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error });
+  }
+};
+
+
+// Get count of bookings made in the last 24 hours
+const getRecentReservationCount = async (req, res) => {
+  try {
+    const now = new Date();
+    const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+    const count = await Reservation.countDocuments({
+      createdAt: { $gte: twentyFourHoursAgo, $lt: now }
+    });
+
+    res.status(200).json({ count });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error });
+  }
+};
+
+
 module.exports = {
   getAllReservations,
   getReservationDetails,
@@ -167,4 +208,7 @@ module.exports = {
   createReservation,
   updateReservation,
   cancelReservation,
+  getPendingReservationCount,
+  getConfirmedReservationCount,
+  getRecentReservationCount,
 };
