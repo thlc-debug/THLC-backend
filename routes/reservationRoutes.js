@@ -9,7 +9,10 @@ const {
   getHotelEarnings,
   createReservation,
   updateReservation,
-  cancelReservation
+  cancelReservation,
+  getPendingReservationCount,
+  getConfirmedReservationCount,
+  getRecentReservationCount
 } = require('../controllers/reservationController');
 
 
@@ -29,5 +32,10 @@ router.put('/update/:id', updateReservation);                            // Upda
 
 router.delete('/delete/:id', cancelReservation);                         // Cancel a booking
 
+router.get('/pending-count',getPendingReservationCount);     // get the count for pending reservation count
+
+router.get('/confirmed-count', getConfirmedReservationCount);   // get the count for confirmed reservation count
+
+router.get('/recent-count', getRecentReservationCount);
 
 module.exports = router;
