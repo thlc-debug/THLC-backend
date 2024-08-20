@@ -5,7 +5,7 @@ const User = require('../Models/User');
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  callbackURL: 'https://thlc-backend.onrender.com/api/auth/google/callback',
+  callbackURL: 'https://thlc-backend.vercel.app/api/auth/google/callback',
 },
 async (token, tokenSecret, profile, done) => {
   
