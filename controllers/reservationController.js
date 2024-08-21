@@ -109,7 +109,8 @@ const createReservation = async (req, res) => {
       room_id,
       price,
       is_payment_done,
-      status
+      status,
+      type_of_booking
     });
 
     await reservation.save();
@@ -199,6 +200,17 @@ const getRecentReservationCount = async (req, res) => {
 };
 
 
+// Get count of reservations with custom_booking : true
+const getCustomBookingCount = async (req, res) => {
+  try {
+    const count = await Reservation.countDocuments({ custom_booking: "true" });
+    res.status(200).json({ count });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error });
+  }
+};
+
+
 module.exports = {
   getAllReservations,
   getReservationDetails,
@@ -211,4 +223,5 @@ module.exports = {
   getPendingReservationCount,
   getConfirmedReservationCount,
   getRecentReservationCount,
+  getCustomBookingCount,
 };
