@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { type } = require("os");
 
 const reservationSchema = new mongoose.Schema(
   {
@@ -15,7 +16,9 @@ const reservationSchema = new mongoose.Schema(
     room_id: { type: mongoose.Schema.Types.ObjectId, ref: "Room" },
     price: { type: Number },
     status: { type: String, enum: ["pending", "confirmed", "cancelled"], default: "pending" },
-    notes: { type: String, trim: true }
+    notes: { type: String, trim: true },
+    custom_booking:{ type: String, enum: ["true", "false"], default: "false" },
+
   },
   { timestamps: true }
 );

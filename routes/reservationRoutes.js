@@ -12,7 +12,8 @@ const {
   cancelReservation,
   getPendingReservationCount,
   getConfirmedReservationCount,
-  getRecentReservationCount
+  getRecentReservationCount,
+  getCustomBookingCount
 } = require('../controllers/reservationController');
 
 
@@ -37,5 +38,7 @@ router.get('/pending-count',getPendingReservationCount);     // get the count fo
 router.get('/confirmed-count', getConfirmedReservationCount);   // get the count for confirmed reservation count
 
 router.get('/recent-count', getRecentReservationCount);
+
+router.get('/custom-bookings', getCustomBookingCount); // get count of custom booking
 
 module.exports = router;
