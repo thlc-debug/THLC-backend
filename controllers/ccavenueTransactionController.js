@@ -18,14 +18,14 @@ const createCCAvenueOrder = async (req, res) => {
       price,
       currency,
     } = req.body;
-
+    console.log("Request body:", req.body); // Debug log
     const reservationDetails = new Reservation({
       name: name,
       email: email,
       phone: phone,
       no_of_people: no_of_people,
       check_in: check_in,
-      chech_out: check_out,
+      check_out: check_out,
       user_id: user_id,
       hotel_id: hotel_id,
       price: price,
@@ -36,8 +36,8 @@ const createCCAvenueOrder = async (req, res) => {
 
     const newTransaction = new Transaction({
       reservationId: newReservation._id,
-      userId: cart.user_id,
-      amount: cart.amount,
+      userId: user_id,
+      amount: price,
       currency: currency,
       paymentMethod: "Net Banking",
       paymentStatus: "Pending",
