@@ -25,7 +25,7 @@ const createCCAvenueOrder = async (req, res) => {
       phone: phone,
       no_of_people: no_of_people,
       check_in: check_in,
-      chech_out: check_out,
+      check_out: check_out,
       user_id: user_id,
       hotel_id: hotel_id,
       price: price,
@@ -36,8 +36,8 @@ const createCCAvenueOrder = async (req, res) => {
 
     const newTransaction = new Transaction({
       reservationId: newReservation._id,
-      userId: cart.user_id,
-      amount: cart.amount,
+      userId: user_id,
+      amount: price,
       currency: currency,
       paymentMethod: "Net Banking",
       paymentStatus: "Pending",
@@ -62,7 +62,7 @@ const createCCAvenueOrder = async (req, res) => {
     const data = {
       merchant_id: process.env.CC_MERCHANT_ID,
       order_id: savedTransaction._id,
-      currency: currency,
+      currency: "INR",
       amount: price.toFixed(2),
       redirect_url: process.env.CC_REDIRECT_URI,
       cancel_url: process.env.CC_CANCEL_URI,
@@ -72,13 +72,15 @@ const createCCAvenueOrder = async (req, res) => {
       billing_email: email,
     };
 
+    console.log(data);
+
     body = Object.keys(data)
       .map(
         (key) => `${encodeURIComponent(key)}=${encodeURIComponent(data[key])}`
       )
       .join("&");
 
-    encRequest = ccav.encrypt(body, keyBase64, ivBase64);
+    encRequest = ccav.encrypt(body, workingKey);
 
     formbody =
       '<form id="nonseamless" method="post" name="redirect" action="https://test.ccavenue.com/transaction/transaction.do?command=initiateTransaction"/> <input type="hidden" id="encRequest" name="encRequest" value="' +
@@ -112,52 +114,66 @@ const ccAvenueResponseHandler = async (req, res) => {
       0x0c, 0x0d, 0x0e, 0x0f,
     ]).toString("base64");
 
-    req.on("data", async (data) => {
+    req.on("data", function (data) {
       ccavEncResponse += data;
       ccavPOST = qs.parse(ccavEncResponse);
       let encryption = ccavPOST.encResp;
-      ccavResponse = ccav.decrypt(encryption, keyBase64, ivBase64);
+      ccavResponse = ccav.decrypt(encryption, workingKey);
     });
 
     req.on("end", async () => {
-      const responseData = ccavResponse.split("&").reduce((acc, pair) => {
-        const [key, value] = pair.split("=");
-        acc[key] = decodeURIComponent(value);
-        return acc;
-      }, {});
+      try {
+        const responseData = ccavResponse.split("&").reduce((acc, pair) => {
+          const [key, value] = pair.split("=");
+          try {
+            acc[key] = decodeURIComponent(value);
+          } catch (error) {
+            // console.error(`Failed to decode URI component: ${value}`, error);
+            acc[key] = value; // Fallback to the raw value if decoding fails
+          }
+          return acc;
+        }, {});
 
-      const transaction = await Transaction.findOne({
-        _id: responseData.order_id,
-      });
-      const reservation = await Reservation.findOne({
-        _id: transaction.reservationId,
-      });
+        const transaction = await Transaction.findOne({
+          _id: responseData.order_id,
+        });
+        const reservation = await Reservation.findOne({
+          _id: transaction.reservationId,
+        });
 
-      transaction.transactionId = responseData.tracking_id;
+        transaction.transactionId = responseData.tracking_id;
 
-      if (responseData.order_status === "Success") {
-        transaction.paymentStatus = "Completed";
-        reservation.status = "confirmed";
-        reservation.is_payment_done = true;
-      } else {
-        transaction.paymentStatus = "Failed";
-        reservation.status = "cancelled";
+        if (responseData.order_status === "Success") {
+          transaction.paymentStatus = "Completed";
+          reservation.status = "confirmed";
+          reservation.is_payment_done = true;
+        } else {
+          transaction.paymentStatus = "Failed";
+          reservation.status = "cancelled";
+        }
+
+        res.status(200).json({
+          orderId: responseData.order_id,
+          transactionId: responseData.tracking_id,
+          paymentMethod: responseData.payment_mode,
+          bankRefNo: responseData.bank_ref_no,
+          currency: responseData.currency,
+          amount: responseData.amount,
+          message: responseData.status_message,
+          transDate: responseData.trans_date,
+        });
+      } catch (error) {
+        console.error("Failed to create order:", error);
+        if (!res.headersSent) {
+          res.status(500).json({ error: "Failed to create order." });
+        }
       }
-
-      res.status(200).data({
-        orderId: responseData.order_id,
-        transactionId: responseData.tracking_id,
-        paymentMethod: responseData.payment_mode,
-        bankRefNo: responseData.bank_ref_no,
-        currency: responseData.currency,
-        amount: responseData.amount,
-        message: responseData.status_message,
-        transDate: responseData.trans_date,
-      });
     });
   } catch (error) {
-    console.error("Failed to create order:", error);
-    res.status(500).json({ error: "Failed to create order." });
+    console.error("Unexpected error:", error);
+    if (!res.headersSent) {
+      res.status(500).json({ error: "Unexpected error occurred." });
+    }
   }
 };
 
