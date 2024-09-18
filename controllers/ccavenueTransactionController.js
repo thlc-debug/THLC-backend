@@ -4,7 +4,7 @@ const qs = require("querystring");
 const Reservation = require("../Models/Reservation");
 const Transaction = require("../Models/transaction");
 
-const CC = require("currency-converter-lt");
+const { Convert } = require("easy-currencies");
 
 const createCCAvenueOrder = async (req, res) => {
   try {
@@ -47,13 +47,7 @@ const createCCAvenueOrder = async (req, res) => {
 
     const savedTransaction = await newTransaction.save();
 
-    const cc = new CC({
-      from: "USD",
-      to: "INR",
-      amount: price,
-    });
-
-    const convertedAmount = await cc.convert();
+    const convertedAmount = await Convert(price).from(currency).to("INR");
 
     let body = "",
       workingKey = process.env.CC_WORKING_KEY,
@@ -139,9 +133,16 @@ const ccAvenueResponseHandler = async (req, res) => {
           transaction.paymentStatus = "Completed";
           reservation.status = "confirmed";
           reservation.is_payment_done = true;
+
+          await reservation.save();
+          await transaction.save();
         } else {
           transaction.paymentStatus = "Failed";
           reservation.status = "cancelled";
+          reservation.is_payment_done = false;
+
+          await reservation.save();
+          await transaction.save();
         }
 
         const respData = {
