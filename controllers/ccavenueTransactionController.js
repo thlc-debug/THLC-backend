@@ -4,6 +4,8 @@ const qs = require("querystring");
 const Reservation = require("../Models/Reservation");
 const Transaction = require("../Models/transaction");
 
+const CC = require("currency-converter-lt");
+
 const createCCAvenueOrder = async (req, res) => {
   try {
     const {
@@ -45,42 +47,40 @@ const createCCAvenueOrder = async (req, res) => {
 
     const savedTransaction = await newTransaction.save();
 
+    const cc = new CC({
+      from: "USD",
+      to: "INR",
+      amount: price,
+    });
+
+    const convertedAmount = await cc.convert();
+
     let body = "",
       workingKey = process.env.CC_WORKING_KEY,
       accessCode = process.env.CC_ACCESS_CODE,
       encRequest = "",
       formbody = "";
 
-    let md5 = crypto.createHash("md5").update(workingKey).digest();
-    let keyBase64 = Buffer.from(md5).toString("base64");
-
-    let ivBase64 = Buffer.from([
-      0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b,
-      0x0c, 0x0d, 0x0e, 0x0f,
-    ]).toString("base64");
-
     const data = {
-      merchant_id: process.env.CC_MERCHANT_ID,
+      // merchant_id: process.env.CC_MERCHANT_ID,
       order_id: savedTransaction._id,
       currency: "INR",
-      amount: price.toFixed(2),
-      redirect_url: process.env.CC_REDIRECT_URI,
-      cancel_url: process.env.CC_CANCEL_URI,
+      amount: convertedAmount.toFixed(2),
+      redirect_url: encodeURIComponent(process.env.CC_REDIRECT_URI),
+      cancel_url: encodeURIComponent(process.env.CC_CANCEL_URI),
       language: "EN",
       billing_name: name,
       billing_tel: phone,
       billing_email: email,
     };
 
-    console.log(data);
+    let newData = `merchant_id=${process.env.CC_MERCHANT_ID}`;
 
-    body = Object.keys(data)
-      .map(
-        (key) => `${encodeURIComponent(key)}=${encodeURIComponent(data[key])}`
-      )
-      .join("&");
+    newData += Object.entries(data)
+      .map(([key, value]) => `&${key}=${value}`)
+      .join("");
 
-    encRequest = ccav.encrypt(body, workingKey);
+    encRequest = ccav.encrypt(newData);
 
     formbody =
       '<form id="nonseamless" method="post" name="redirect" action="https://test.ccavenue.com/transaction/transaction.do?command=initiateTransaction"/> <input type="hidden" id="encRequest" name="encRequest" value="' +
@@ -106,19 +106,11 @@ const ccAvenueResponseHandler = async (req, res) => {
       workingKey = process.env.CC_MERCHANT_ID,
       ccavPOST = "";
 
-    let md5 = crypto.createHash("md5").update(workingKey).digest();
-    let keyBase64 = Buffer.from(md5).toString("base64");
-
-    let ivBase64 = Buffer.from([
-      0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b,
-      0x0c, 0x0d, 0x0e, 0x0f,
-    ]).toString("base64");
-
     req.on("data", function (data) {
       ccavEncResponse += data;
       ccavPOST = qs.parse(ccavEncResponse);
       let encryption = ccavPOST.encResp;
-      ccavResponse = ccav.decrypt(encryption, workingKey);
+      ccavResponse = ccav.decrypt(encryption);
     });
 
     req.on("end", async () => {
@@ -152,7 +144,7 @@ const ccAvenueResponseHandler = async (req, res) => {
           reservation.status = "cancelled";
         }
 
-        res.status(200).json({
+        const respData = {
           orderId: responseData.order_id,
           transactionId: responseData.tracking_id,
           paymentMethod: responseData.payment_mode,
@@ -161,7 +153,27 @@ const ccAvenueResponseHandler = async (req, res) => {
           amount: responseData.amount,
           message: responseData.status_message,
           transDate: responseData.trans_date,
-        });
+        };
+
+        const queryParams = new URLSearchParams(responseData).toString();
+
+        // Redirect with query parameters
+        const redirectUrl = `http://localhost:3000/booking-confirmation?${queryParams}`;
+
+        res.redirect(redirectUrl);
+
+        // res.status(200).json({
+        //   orderId: responseData.order_id,
+        //   transactionId: responseData.tracking_id,
+        //   paymentMethod: responseData.payment_mode,
+        //   bankRefNo: responseData.bank_ref_no,
+        //   currency: responseData.currency,
+        //   amount: responseData.amount,
+        //   message: responseData.status_message,
+        //   transDate: responseData.trans_date,
+        // });
+
+        // res.redirect("http://localhost:3000/booking-confirmation");
       } catch (error) {
         console.error("Failed to create order:", error);
         if (!res.headersSent) {
