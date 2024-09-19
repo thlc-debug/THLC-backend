@@ -4,50 +4,56 @@ const qs = require("querystring");
 const Reservation = require("../Models/Reservation");
 const Transaction = require("../Models/transaction");
 
-const { Convert } = require("easy-currencies");
+const CC = require("currency-converter-lt");
 
 const createCCAvenueOrder = async (req, res) => {
+  const {
+    name,
+    email,
+    phone,
+    no_of_people,
+    check_in,
+    check_out,
+    user_id,
+    hotel_id,
+    price,
+    currency,
+  } = req.body;
+
+  const reservationDetails = new Reservation({
+    name: name,
+    email: email,
+    phone: phone,
+    no_of_people: no_of_people,
+    check_in: check_in,
+    check_out: check_out,
+    user_id: user_id,
+    hotel_id: hotel_id,
+    price: price,
+    status: "pending",
+  });
+
+  const newReservation = await reservationDetails.save();
+
+  const newTransaction = new Transaction({
+    reservationId: newReservation._id,
+    userId: user_id,
+    amount: price,
+    currency: currency,
+    paymentMethod: "Net Banking",
+    paymentStatus: "Pending",
+  });
+
+  const savedTransaction = await newTransaction.save();
+
   try {
-    const {
-      name,
-      email,
-      phone,
-      no_of_people,
-      check_in,
-      check_out,
-      user_id,
-      hotel_id,
-      price,
-      currency,
-    } = req.body;
-
-    const reservationDetails = new Reservation({
-      name: name,
-      email: email,
-      phone: phone,
-      no_of_people: no_of_people,
-      check_in: check_in,
-      check_out: check_out,
-      user_id: user_id,
-      hotel_id: hotel_id,
-      price: price,
-      status: "pending",
-    });
-
-    const newReservation = await reservationDetails.save();
-
-    const newTransaction = new Transaction({
-      reservationId: newReservation._id,
-      userId: user_id,
+    const cc = new CC({
+      from: "INR",
+      to: currency,
       amount: price,
-      currency: currency,
-      paymentMethod: "Net Banking",
-      paymentStatus: "Pending",
     });
 
-    const savedTransaction = await newTransaction.save();
-
-    const convertedAmount = await Convert(price).from(currency).to("INR");
+    const convertedAmount = await cc.convert();
 
     let body = "",
       workingKey = process.env.CC_WORKING_KEY,
@@ -89,6 +95,18 @@ const createCCAvenueOrder = async (req, res) => {
     return;
   } catch (error) {
     console.error("Failed to create order:", error);
+
+    // delete transaction and reservation if order creation fails
+    const deleteReservation = await Reservation.deleteOne({
+      _id: newReservation._id,
+    });
+
+    const deleteTransaction = await Transaction.deleteOne({
+      _id: savedTransaction._id,
+    });
+
+    console.log(deleteReservation, deleteTransaction);
+
     res.status(500).json({ error: "Failed to create order." });
   }
 };
@@ -133,17 +151,14 @@ const ccAvenueResponseHandler = async (req, res) => {
           transaction.paymentStatus = "Completed";
           reservation.status = "confirmed";
           reservation.is_payment_done = true;
-
-          await reservation.save();
-          await transaction.save();
         } else {
           transaction.paymentStatus = "Failed";
           reservation.status = "cancelled";
           reservation.is_payment_done = false;
-
-          await reservation.save();
-          await transaction.save();
         }
+
+        await transaction.save();
+        await reservation.save();
 
         const respData = {
           orderId: responseData.order_id,

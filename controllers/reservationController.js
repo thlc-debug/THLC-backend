@@ -51,7 +51,6 @@ const getAllReservationsByUser = async (req, res) => {
     // }
 
     // Retrieve reservations of the user
-    // const data = await Reservation.deleteMany({ user_id: user_id });
 
     const reservations = await Reservation.find({ user_id })
       .populate("hotel_id")
