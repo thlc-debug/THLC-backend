@@ -1,5 +1,5 @@
-const Reservation = require('../Models/Reservation');
-const User = require('../Models/User');
+const Reservation = require("../Models/Reservation");
+const User = require("../Models/User");
 
 // Get a list of all reservations (for admin users)
 const getAllReservations = async (req, res) => {
@@ -11,10 +11,12 @@ const getAllReservations = async (req, res) => {
     //   return res.status(403).json({ message: 'Access denied' });
     // }
 
-    const reservations = await Reservation.find().populate('hotel_id').populate('room_id');
+    const reservations = await Reservation.find()
+      .populate("hotel_id")
+      .populate("room_id");
     res.json(reservations);
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error });
+    res.status(500).json({ message: "Server error", error });
   }
 };
 
@@ -22,15 +24,17 @@ const getAllReservations = async (req, res) => {
 const getReservationDetails = async (req, res) => {
   try {
     const { id } = req.params;
-    const reservation = await Reservation.findById(id).populate('hotel_id').populate('room_id');
+    const reservation = await Reservation.findById(id)
+      .populate("hotel_id")
+      .populate("room_id");
 
     if (!reservation) {
-      return res.status(404).json({ message: 'Reservation not found' });
+      return res.status(404).json({ message: "Reservation not found" });
     }
 
     res.json(reservation);
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error });
+    res.status(500).json({ message: "Server error", error });
   }
 };
 
@@ -47,7 +51,10 @@ const getAllReservationsByUser = async (req, res) => {
     // }
 
     // Retrieve reservations of the user
-    const reservations = await Reservation.find({ user_id }).populate('hotel_id').populate('room_id');
+
+    const reservations = await Reservation.find({ user_id })
+      .populate("hotel_id")
+      .populate("room_id");
     res.status(200).json(reservations);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -59,7 +66,9 @@ const getAllReservationsByHotel = async (req, res) => {
   const { hotel_id } = req.params;
 
   try {
-    const reservations = await Reservation.find({ hotel_id }).populate('hotel_id').populate('room_id');
+    const reservations = await Reservation.find({ hotel_id })
+      .populate("hotel_id")
+      .populate("room_id");
     res.status(200).json(reservations);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -76,10 +85,13 @@ const getHotelEarnings = async (req, res) => {
   try {
     const reservations = await Reservation.find({
       hotel_id,
-      check_in: { $gte: startDate, $lt: endDate }
+      check_in: { $gte: startDate, $lt: endDate },
     });
 
-    const totalEarnings = reservations.reduce((total, reservation) => total + reservation.price, 0);
+    const totalEarnings = reservations.reduce(
+      (total, reservation) => total + reservation.price,
+      0
+    );
     res.status(200).json({ totalEarnings });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -90,8 +102,19 @@ const getHotelEarnings = async (req, res) => {
 const createReservation = async (req, res) => {
   try {
     const {
-      user_id, name, email, phone, id_proof, no_of_people, check_in, check_out,
-      hotel_id, room_id, price, is_payment_done, status
+      user_id,
+      name,
+      email,
+      phone,
+      id_proof,
+      no_of_people,
+      check_in,
+      check_out,
+      hotel_id,
+      room_id,
+      price,
+      is_payment_done,
+      status,
     } = req.body;
 
     // const user_id = req.user_id; // Assumed to be coming from JWT
@@ -110,17 +133,19 @@ const createReservation = async (req, res) => {
       price,
       is_payment_done,
       status,
-      type_of_booking
+      type_of_booking,
     });
 
     await reservation.save();
 
     // Update user's booking history
-    await User.findByIdAndUpdate(user_id, { $push: { bookingHistory: reservation._id } });
+    await User.findByIdAndUpdate(user_id, {
+      $push: { bookingHistory: reservation._id },
+    });
 
     res.status(201).json(reservation);
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error });
+    res.status(500).json({ message: "Server error", error });
   }
 };
 
@@ -130,15 +155,17 @@ const updateReservation = async (req, res) => {
     const { id } = req.params;
     const updates = req.body;
 
-    const reservation = await Reservation.findByIdAndUpdate(id, updates, { new: true });
+    const reservation = await Reservation.findByIdAndUpdate(id, updates, {
+      new: true,
+    });
 
     if (!reservation) {
-      return res.status(404).json({ message: 'Reservation not found' });
+      return res.status(404).json({ message: "Reservation not found" });
     }
 
     res.json(reservation);
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error });
+    res.status(500).json({ message: "Server error", error });
   }
 };
 
@@ -149,39 +176,35 @@ const cancelReservation = async (req, res) => {
     const reservation = await Reservation.findById(id);
 
     if (!reservation) {
-      return res.status(404).json({ message: 'Reservation not found' });
+      return res.status(404).json({ message: "Reservation not found" });
     }
 
     await Reservation.findByIdAndDelete(id);
-    res.json({ message: 'Reservation cancelled successfully' });
+    res.json({ message: "Reservation cancelled successfully" });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error });
+    res.status(500).json({ message: "Server error", error });
   }
 };
-
-
 
 // Get count of reservations with status 'pending'
 const getPendingReservationCount = async (req, res) => {
   try {
-    const count = await Reservation.countDocuments({ status: 'pending' });
+    const count = await Reservation.countDocuments({ status: "pending" });
     res.status(200).json({ count });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error });
+    res.status(500).json({ message: "Server error", error });
   }
 };
-
 
 // Get count of reservations with status 'confirmed'
 const getConfirmedReservationCount = async (req, res) => {
   try {
-    const count = await Reservation.countDocuments({ status: 'confirmed' });
+    const count = await Reservation.countDocuments({ status: "confirmed" });
     res.status(200).json({ count });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error });
+    res.status(500).json({ message: "Server error", error });
   }
 };
-
 
 // Get count of bookings made in the last 24 hours
 const getRecentReservationCount = async (req, res) => {
@@ -190,15 +213,14 @@ const getRecentReservationCount = async (req, res) => {
     const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
     const count = await Reservation.countDocuments({
-      createdAt: { $gte: twentyFourHoursAgo, $lt: now }
+      createdAt: { $gte: twentyFourHoursAgo, $lt: now },
     });
 
     res.status(200).json({ count });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error });
+    res.status(500).json({ message: "Server error", error });
   }
 };
-
 
 // Get count of reservations with custom_booking : true
 const getCustomBookingCount = async (req, res) => {
@@ -206,10 +228,9 @@ const getCustomBookingCount = async (req, res) => {
     const count = await Reservation.countDocuments({ custom_booking: "true" });
     res.status(200).json({ count });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error });
+    res.status(500).json({ message: "Server error", error });
   }
 };
-
 
 module.exports = {
   getAllReservations,
