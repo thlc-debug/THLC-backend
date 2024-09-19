@@ -7,7 +7,7 @@ const {
   deleteTransaction
 } = require('../controllers/transactionController');
 const { payPalCreateOrder, captureOrder } = require('../controllers/paypalTransactionController');
-const { createCCAvenueOrder, ccAvenueResponseHandler } = require('../controllers/ccAvenueTransactionController');
+const { createCCAvenueOrder, ccAvenueResponseHandler } = require('../controllers/ccavenueTransactionController');
 
 const router = express.Router();
 
