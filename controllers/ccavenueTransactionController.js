@@ -53,7 +53,7 @@ const createCCAvenueOrder = async (req, res) => {
       amount: price,
     });
 
-    console.log("Converted amount:", convertedAmount);
+    const convertedAmount = await cc.convert();
 
     let body = "",
       workingKey = process.env.CC_WORKING_KEY,
