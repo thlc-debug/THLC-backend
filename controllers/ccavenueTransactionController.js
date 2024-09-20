@@ -48,12 +48,12 @@ const createCCAvenueOrder = async (req, res) => {
 
   try {
     const cc = new CC({
-      from: "INR",
-      to: currency,
+      from: currency,
+      to: "INR",
       amount: price,
     });
 
-    const convertedAmount = await cc.convert();
+    console.log("Converted amount:", convertedAmount);
 
     let body = "",
       workingKey = process.env.CC_WORKING_KEY,
