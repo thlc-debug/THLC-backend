@@ -174,22 +174,9 @@ const ccAvenueResponseHandler = async (req, res) => {
         const queryParams = new URLSearchParams(responseData).toString();
 
         // Redirect with query parameters
-        const redirectUrl = `http://localhost:3000/booking-confirmation?${queryParams}`;
+        const redirectUrl = `${process.env.FRONTEND_REDIRECT_URL}/booking-confirmation?${queryParams}`;
 
         res.redirect(redirectUrl);
-
-        // res.status(200).json({
-        //   orderId: responseData.order_id,
-        //   transactionId: responseData.tracking_id,
-        //   paymentMethod: responseData.payment_mode,
-        //   bankRefNo: responseData.bank_ref_no,
-        //   currency: responseData.currency,
-        //   amount: responseData.amount,
-        //   message: responseData.status_message,
-        //   transDate: responseData.trans_date,
-        // });
-
-        // res.redirect("http://localhost:3000/booking-confirmation");
       } catch (error) {
         console.error("Failed to create order:", error);
         if (!res.headersSent) {
